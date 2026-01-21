@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Puzzle Board</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #1f2933;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    h1 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    #board {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 980px;
+      margin: 18px 0;
+      gap: 8px;
+    }
+    .tile {
+      width: 64px;
+      height: 76px;
+      background: #0f172a;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      font-weight: 800;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    .space {
+      width: 28px;
+      background: transparent;
+      border: none;
+    }
+
+    /* Controls */
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin: 6px 0 16px 0;
+    }
+    #nextBtn {
+      padding: 14px 18px;
+      font-size: 20px;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: #e5e7eb;
+      color: #111827;
+      touch-action: manipulation;
+    }
+    #puzzleLabel {
+      font-size: 16px;
+      opacity: 0.95;
+    }
+
+    #letters {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      width: min(980px, 100%);
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    button.letter {
+      padding: 14px 0;
+      font-size: 22px;
+      font-weight: 900;
+      background: #e5e7eb;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    button.letter.used {
+      background: #6b7280;
+      color: #111827;
+      cursor: default;
+    }
+
+    /* Make it scale nicely on smaller screens */
+    @media (max-width: 520px) {
+      .tile { width: 52px; height: 64px; font-size: 32px; }
+      #letters { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+      button.letter { font-size: 20px; padding: 12px 0; }
+      #nextBtn { font-size: 18px; padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Puzzle Board</h1>
+  <p>Edit the phrase in the code. Click letters to reveal.</p>
+
+  <div id="board"></div>
+
+  <div id="letters"></div>
+
+  <script>
+    // 20 puzzles (edit these anytime)
+    const puzzles = [
+      "WINTER OLYMPIC GAMES",
+      "FIGURE SKATING",
+      "SPEED SKATING",
+      "ICE HOCKEY",
+      "CURLING CHAMPIONS",
+      "DOWNHILL SKIING",
+      "CROSS COUNTRY SKIING",
+      "SNOWBOARDING TRICKS",
+      "BOBSLED TEAM",
+      "BIATHLON RACE",
+      "SKI JUMPING",
+      "HOT COCOA BY THE FIRE",
+      "FRESH FALLING SNOW",
+      "MITTENS AND SCARVES",
+      "WINTER WONDERLAND",
+      "BUILD A SNOWMAN",
+      "SLEIGH RIDE",
+      "COZY BLANKET",
+      "WARM APPLE CIDER",
+      "FROSTY MORNING"
+    ];
+
+    let puzzleIndex = 0;
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+    const board = document.getElementById("board");
+    const lettersDiv = document.getElementById("letters");
+
+    function renderKeyboard(onLetter) {
+      lettersDiv.innerHTML = "";
+      alphabet.forEach((letter) => {
+        const btn = document.createElement("button");
+        btn.textContent = letter;
+        btn.className = "letter";
+        // iPad/Safari-friendly tap handler
+        const tap = (ev) => {
+          if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+          if (btn.disabled) return;
+          btn.classList.add("used");
+          btn.disabled = true;
+          onLetter(letter);
+        };
+        btn.addEventListener("click", tap, { passive: false });
+        btn.addEventListener("touchstart", tap, { passive: false });
+        lettersDiv.appendChild(btn);
+      });
+    }
+
+    function renderBoard(phrase) {
+      board.innerHTML = "";
+      const tiles = [];
+
+      phrase.split("").forEach((char) => {
+        if (char === " ") {
+          const space = document.createElement("div");
+          space.className = "tile space";
+          board.appendChild(space);
+        } else {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          tile.textContent = "";
+          tile.dataset.letter = char.toUpperCase();
+          tiles.push(tile);
+          board.appendChild(tile);
+        }
+      });
+
+      renderKeyboard((letter) => {
+        tiles.forEach((tile) => {
+          if (tile.dataset.letter === letter) {
+            tile.textContent = letter;
+          }
+        });
+      });
+    }
+
+    function loadPuzzle(index) {
+      const phrase = puzzles[index] || "";
+      renderBoard(phrase);
+      document.getElementById("puzzleLabel").textContent = `Puzzle ${index + 1} of ${puzzles.length}`;
+    }
+
+    function nextPuzzle() {
+      puzzleIndex = (puzzleIndex + 1) % puzzles.length;
+      loadPuzzle(puzzleIndex);
+    }
+
+    // Controls (button + label)
+    const controls = document.createElement("div");
+    controls.id = "controls";
+
+    const nextBtn = document.createElement("button");
+    nextBtn.id = "nextBtn";
+    nextBtn.textContent = "Next Puzzle";
+
+    const puzzleLabel = document.createElement("div");
+    puzzleLabel.id = "puzzleLabel";
+
+    controls.appendChild(nextBtn);
+    controls.appendChild(puzzleLabel);
+
+    // Put controls between board and letters
+    lettersDiv.insertAdjacentElement("beforebegin", controls);
+
+    // iPad/Safari-friendly tap handler (prevents "dead" clicks in some viewers)
+    function addTapHandler(el, handler) {
+      const wrapped = (ev) => {
+        // Prevent double-tap zoom / ghost clicks in some contexts
+        if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+        handler();
+      };
+      el.addEventListener("click", wrapped, { passive: false });
+      el.addEventListener("touchstart", wrapped, { passive: false });
+    }
+
+    addTapHandler(nextBtn, nextPuzzle);
+
+    // Initial load
+    loadPuzzle(puzzleIndex);
+
+    // Optional keyboard support: type letters; press N for next puzzle
+    document.addEventListener("keydown", (e) => {
+      const key = (e.key || "").toUpperCase();
+      if (key === "N") {
+        nextPuzzle();
+        return;
+      }
+      if (key.length === 1 && key >= "A" && key <= "Z") {
+        const btn = Array.from(document.querySelectorAll("button.letter"))
+          .find((b) => b.textContent === key);
+        if (btn && !btn.disabled) btn.click();
+      }
+    });
+  </script>
+</body>
+</html>
